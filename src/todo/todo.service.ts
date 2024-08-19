@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
-import { TodoRepository } from './repo/todo.repository';
 import { Todo } from './entities/todo.entity';
 import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TodoService {
+  private readonly todoRepository: Repository<Todo>;
   constructor(
-    private todoRepository: TodoRepository,
-    private userService: UserService,
-  ) {}
+    @InjectRepository(Todo) private readonly baseRepository: Repository<Todo>,
+    private readonly userService: UserService,
+  ) {
+    this.todoRepository = baseRepository.extend({});
+  }
 
   async create(createTodoDto: CreateTodoDto, userId: number) {
     let todo: Todo = new Todo();
@@ -21,19 +24,39 @@ export class TodoService {
     return this.todoRepository.save(todo);
   }
 
-  findAll() {
-    return `This action returns all todo`;
+  findAllTodoByUserNotCompleted(userId: number) {
+    // userId not completed
+    return this.todoRepository.find({
+      relations: ['user'],
+      where: {
+        user: {
+          id: userId,
+        },
+        completed: false,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} todo`;
+  findAllTodoByUserCompleted(userId: number) {
+    // userId not completed
+    return this.todoRepository.find({
+      relations: ['user'],
+      where: {
+        user: {
+          id: userId,
+        },
+        completed: true,
+      },
+    });
   }
 
-  update(id: number, updateTodoDto: UpdateTodoDto) {
-    return `This action updates a #${id} todo`;
+  update(todoId: number) {
+    return this.todoRepository.update(todoId, {
+      completed: true,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} todo`;
+  remove(todId: number) {
+    return this.todoRepository.delete(todId);
   }
 }
