@@ -13,8 +13,10 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RoleGuard } from 'src/auth/guard/role.guard';
 import { Constants } from 'src/utils/constants';
+import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 @Controller('user')
+@ApiTags('User')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -23,6 +25,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @ApiSecurity('JWT-auth')
   @Get()
   @UseGuards(new RoleGuard(Constants.ROLES.ADMIN_ROLE))
   findAll(@Req() req) {
@@ -30,6 +33,7 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @ApiSecurity('JWT-auth')
   @Delete(':id')
   @UseGuards(new RoleGuard(Constants.ROLES.ADMIN_ROLE))
   remove(@Param('id') id: string, @Req() req) {
